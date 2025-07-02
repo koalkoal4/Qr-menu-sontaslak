@@ -79,7 +79,7 @@ function ProductRow({ id, product, openDeleteModal, onStatusChange }: { id: stri
                 {product.image_url && <img className="h-10 w-10 rounded-full object-cover mr-4" src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${product.image_url}`} alt={product.name} />}
                 <div>
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                    <div className="text-sm text-gray-500">${product.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-500">₺{product.price.toFixed(2)}</div>
                 </div>
             </div>
             <div className="flex items-center space-x-4">
