@@ -3,8 +3,14 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Product, Category } from '@/lib/types';
+// ProductFormData tipini ProductForm'dan alacak şekilde düzenledik
 import ProductForm from '@/components/ProductForm';
+import type { Product, Category } from '@/lib/types';
+// onSave fonksiyonunun beklediği tipi içe aktarıyoruz.
+// ÖNEMLİ: Bunun çalışması için ProductForm.tsx dosyasında ProductFormData tipini export etmeniz gerekebilir.
+// Eğer export edilmemişse, ProductForm.tsx'te "type ProductFormData" başlığını "export type ProductFormData" olarak değiştirin.
+import { ProductFormData } from '@/components/ProductForm';
+
 
 export default function ProductEditPage() {
   const router = useRouter();
@@ -48,11 +54,13 @@ export default function ProductEditPage() {
     fetchData();
   }, [supabase, id]);
 
-  const handleSave = async (productData: Omit<Product, 'id'>) => {
+  // --- GÜNCELLEME: handleSave fonksiyonunun parametre tipi düzeltildi ---
+  const handleSave = async (productData: ProductFormData) => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ ...productData, id: Number(id) })
+        // productData objesi artık ProductForm'dan gelen veriyi içeriyor
+        .update({ ...productData })
         .eq('id', id);
       
       if (error) throw error;

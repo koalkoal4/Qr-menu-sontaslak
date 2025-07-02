@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Product, Category } from '@/lib/types';
 
-type ProductFormData = {
+export type ProductFormData = {
   name: string;
   description: string | null;
   price: number;
