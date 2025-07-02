@@ -1,6 +1,26 @@
 import { useState } from 'react';
 
-export default function SimpleModal({ isOpen, title, message, confirmText, cancelText, onConfirm, onCancel }) {
+// 1. Bileşenin alacağı tüm proplar için bir tip tanımlıyoruz.
+type SimpleModalProps = {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+// 2. Bu tipi bileşenin parametrelerine uyguluyoruz.
+export default function SimpleModal({ 
+  isOpen, 
+  title, 
+  message, 
+  confirmText, 
+  cancelText, 
+  onConfirm, 
+  onCancel 
+}: SimpleModalProps) {
   if (!isOpen) return null;
 
   return (
