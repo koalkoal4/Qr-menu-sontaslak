@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useRouter(); // router'ı hala kullanabiliriz, ancak yönlendirme için değil
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,43 +18,31 @@ export default function LoginPage() {
     setError(null);
     
     try {
-      console.log('Attempting login with:', email);
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        console.log('Login successful, session:', data.session);
-        
-        // Check if session exists
-        if (!data.session) {
-          console.error('Login succeeded but session is null');
-          setError('Login succeeded but session is null. Check Supabase configuration.');
-          return;
-        }
-        
-        // Force refresh and redirect
-        router.refresh();
-        router.push('/admin');
-        console.log('Redirecting to /admin');
-      } catch (err) {
-        console.error('Login error:', err);
-        setError('An unexpected error occurred during login');
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) {
+        throw signInError;
       }
-    } catch (err) {
+      
+      console.log('Login successful, session:', data.session);
+      
+      if (!data.session) {
+        console.error('Login succeeded but session is null');
+        setError('Oturum bilgisi alınamadı. Lütfen Supabase ayarlarınızı kontrol edin.');
+        setLoading(false);
+        return;
+      }
+      
+      // --- DEĞİŞİKLİK BURADA ---
+      // Vercel'de daha güvenilir çalışması için sayfayı tamamen yenileyerek yönlendirme yapıyoruz.
+      window.location.href = '/admin';
+      
+    } catch (err: any) {
       console.error('Login error details:', err);
-      
-      let errorMessage = 'Invalid email or password';
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage = (err as any).message;
-      }
-      
-      setError(errorMessage);
-    } finally {
+      setError(err.message || 'Geçersiz e-posta veya şifre.');
       setLoading(false);
     }
   };
@@ -113,7 +101,7 @@ export default function LoginPage() {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </button>
           </div>
         </form>
