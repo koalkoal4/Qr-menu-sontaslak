@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Product, Category } from 'lib/types';
+import { Category } from 'lib/types';
 import ProductForm from 'components/ProductForm';
+// ProductForm'un kullandığı veri tipini içe aktarıyoruz
+import { ProductFormData } from 'components/ProductForm';
 
 export default function NewProductPage() {
   const router = useRouter();
-  
   const supabase = createClientComponentClient();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -34,19 +35,37 @@ export default function NewProductPage() {
     fetchCategories();
   }, [supabase]);
 
-  const handleSave = async (productData: Omit<Product, 'id'>) => {
+  // --- GÜNCELLEME: handleSave fonksiyonu düzeltildi ---
+  const handleSave = async (productData: ProductFormData) => {
     try {
+      // Yeni ürün için display_order'ı belirlemek üzere mevcut ürün sayısını alalım
+      const { count, error: countError } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.warn('Could not get product count to set display_order, defaulting to 0.');
+      }
+      
+      // Veritabanına gönderilecek son veriyi oluşturalım
+      const dataToInsert = {
+        ...productData,
+        display_order: count ?? 0, // Mevcut ürün sayısını sıralama olarak ayarla
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert([productData]);
+        .insert([dataToInsert]);
       
       if (error) throw error;
       
       router.push('/admin');
+      router.refresh(); // Admin panelinin yeni ürünü göstermesi için sayfayı yenile
     } catch (error) {
       console.error('Error creating product:', error);
     }
   };
+  // --- DEĞİŞİKLİĞİN SONU ---
 
   if (isLoading) {
     return (
