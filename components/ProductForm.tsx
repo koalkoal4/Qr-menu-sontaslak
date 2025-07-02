@@ -9,6 +9,7 @@ export type ProductFormData = {
   image_url: string | null;
   category_id: string;
   is_available: boolean;
+  display_order: number;
 };
 
 type ProductFormProps = {
