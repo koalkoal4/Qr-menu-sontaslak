@@ -293,24 +293,25 @@ export default function AdminDashboard() {
   
     // Veritabanı güncelleme işlemleri
     try {
-      const updates: Promise<any>[] = [];
+      const updates = [];
+
   
       if (activeContainer === overContainer) {
         // Sadece tek bir kategorinin sıralamasını güncelle
         newProductsByCategoryState[activeContainer].forEach((product, index) => {
-          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id).select());
+          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
       } else {
         // İki kategoriyi de güncelle
         // 1. Taşınan ürünün kategori ID'sini güncelle
-        updates.push(supabase.from('products').update({ category_id: overContainer }).eq('id', activeId).select());
+        updates.push(supabase.from('products').update({ category_id: overContainer }).eq('id', activeId));
         // 2. Eski kategorinin sıralamasını güncelle
         newProductsByCategoryState[activeContainer].forEach((product, index) => {
-          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id).select());
+          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
         // 3. Yeni kategorinin sıralamasını güncelle
         newProductsByCategoryState[overContainer].forEach((product, index) => {
-          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id).select());
+          updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
       }
   
