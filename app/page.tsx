@@ -68,10 +68,23 @@ function MenuHeader({ profile }: { profile: Profile | null }) {
     );
 }
 
+const positionClasses: { [key: string]: string } = {
+  'bottom-left': 'items-end justify-start text-left',
+  'bottom-center': 'items-end justify-center text-center',
+  'bottom-right': 'items-end justify-end text-right',
+  'center': 'items-center justify-center text-center',
+  'top-left': 'items-start justify-start text-left',
+  'top-center': 'items-start justify-center text-center',
+  'top-right': 'items-start justify-end text-right',
+};
+
 function CategoryCard({ category }: { category: Category }) {
   const imageUrl = category.image_url
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/category-images/${category.image_url}`
     : null;
+
+  // --- GÜNCELLEME: Varsayılan pozisyonu belirle ---
+  const textPositionClass = positionClasses[category.name_position] || 'items-end justify-start text-left';
 
   return (
     <Link href={`/menu#category-${category.id}`} className="block group">
@@ -87,8 +100,10 @@ function CategoryCard({ category }: { category: Category }) {
             />
           )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end">
-          <h2 className="p-4 text-xl font-bold text-white">
+        {/* --- GÜNCELLEME: Dinamik pozisyon sınıfını burada kullanıyoruz. 'flex' sınıfı da eklendi. --- */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex p-4 ${textPositionClass}`}>
+          {/* --- GÜNCELLEME: h2 etiketindeki p-4 sınıfı kaldırıldı, çünkü üst elemente taşındı. --- */}
+          <h2 className="text-xl font-bold text-white">
             {category.name}
           </h2>
         </div>

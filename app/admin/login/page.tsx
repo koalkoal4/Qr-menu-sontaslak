@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const supabase = createClientComponentClient();
@@ -11,6 +12,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { session, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && session) {
+      router.push('/admin');
+    }
+  }, [session, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Formun varsayılan davranışını engelle
@@ -55,6 +63,14 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (isLoading || session) {
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-xl">Yönlendiriliyor...</div>
+        </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

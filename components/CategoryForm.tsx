@@ -8,10 +8,21 @@ type CategoryFormProps = {
   isSaving: boolean;
 };
 
+const positionOptions = [
+    { value: 'bottom-left', label: 'Sol Alt' },
+    { value: 'bottom-center', label: 'Orta Alt' },
+    { value: 'bottom-right', label: 'Sağ Alt' },
+    { value: 'center', label: 'Tam Orta' },
+    { value: 'top-left', label: 'Sol Üst' },
+    { value: 'top-center', label: 'Orta Üst' },
+    { value: 'top-right', label: 'Sağ Üst' },
+];
+
 export default function CategoryForm({ initialData, onSave, isSaving }: CategoryFormProps) {
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [displayOrder, setDisplayOrder] = useState(initialData?.display_order || 0);
+  const [namePosition, setNamePosition] = useState(initialData?.name_position || 'bottom-left');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.image_url 
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/category-images/${initialData.image_url}` 
@@ -37,6 +48,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         name,
         description: description || null,
         display_order: displayOrder,
+        name_position: namePosition, // Bu satırı ekleyin
       } as Omit<Category, 'id'>,
       imageFile
     );
@@ -114,6 +126,26 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         />
       </div>
       
+
+      <div>
+        <label htmlFor="namePosition" className="block text-sm font-medium text-gray-700">
+          İsim Pozisyonu
+        </label>
+        <select
+          id="namePosition"
+          value={namePosition}
+          onChange={(e) => setNamePosition(e.target.value)}
+          className={inputStyle}
+          required
+        >
+          {positionOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <button
         type="submit"
         disabled={isSaving}

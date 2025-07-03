@@ -7,6 +7,7 @@ export type Category = {
   user_id: string;
   image_url?: string | null;
   is_available: boolean; // <-- BU SATIRI EKLEYİN
+  name_position: string;
 };
 
 // Product tipi zaten bu alana sahip, o yüzden orada değişiklik gerekmiyor.
