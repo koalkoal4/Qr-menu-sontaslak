@@ -28,6 +28,10 @@ export default function ProductForm({ initialData, categories, onSave }: Product
   const [image, setImage] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // --- GÖRSEL İYİLEŞTİRME: Daha belirgin input stilleri ---
+  const inputStyle = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+  // --- DEĞİŞİKLİĞİN SONU ---
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
@@ -59,7 +63,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           Product Name
@@ -69,7 +73,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         />
       </div>
@@ -83,7 +87,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         />
       </div>
@@ -99,7 +103,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           onChange={(e) => setPrice(Number(e.target.value))}
           min="0"
           step="0.01"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         />
       </div>
@@ -112,7 +116,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           id="category"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         >
           <option value="">Select a category</option>

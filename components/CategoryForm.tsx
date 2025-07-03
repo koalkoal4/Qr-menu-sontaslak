@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 type CategoryFormProps = {
   initialData?: Category;
-  onSave: (category: Omit<Category, 'id'>, imageFile?: File | null) => void; // <-- 2. parametre olarak resim dosyasını ekledik
+  onSave: (category: Omit<Category, 'id'>, imageFile?: File | null) => void;
   isSaving: boolean;
 };
 
@@ -12,22 +12,23 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [displayOrder, setDisplayOrder] = useState(initialData?.display_order || 0);
-  
-  // --- YENİ EKLENEN KISIM BAŞLANGICI ---
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.image_url 
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/category-images/${initialData.image_url}` 
     : null
   );
 
+  // --- GÖRSEL İYİLEŞTİRME: Daha belirgin input stilleri ---
+  const inputStyle = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
+  // --- DEĞİŞİKLİĞİN SONU ---
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // Seçilen resmin anlık önizlemesini oluştur
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
-  // --- YENİ EKLENEN KISIM SONU ---
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +37,8 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         name,
         description: description || null,
         display_order: displayOrder,
-        // image_url burada belirlenmiyor, bir üst bileşende ele alınacak
       } as Omit<Category, 'id'>,
-      imageFile // Resim dosyasını da gönder
+      imageFile
     );
   };
 
@@ -53,12 +53,11 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         />
       </div>
       
-      {/* --- YENİ RESİM YÜKLEME ALANI --- */}
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-700">
           Category Image (Optional)
@@ -86,7 +85,6 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           />
         </div>
       </div>
-      {/* --- YENİ RESİM YÜKLEME ALANI SONU --- */}
       
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
@@ -97,7 +95,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           value={description || ''}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
         />
       </div>
       
@@ -111,7 +109,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           value={displayOrder}
           onChange={(e) => setDisplayOrder(Number(e.target.value))}
           min="0"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className={inputStyle}
           required
         />
       </div>

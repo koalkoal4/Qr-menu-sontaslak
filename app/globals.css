@@ -24,3 +24,28 @@ body {
   @apply bg-background text-primary;
   transition: background-color 0.3s, color 0.3s;
 }
+
+/* Mobil Cihazlar İçin Otomatik Uyarlanabilir Tablo Stilleri */
+@media (max-width: 640px) {
+  .responsive-table thead {
+    display: none; /* Mobilde başlık satırını gizle */
+  }
+  .responsive-table tr {
+    display: block; /* Her satırı bir blok (kart gibi) yap */
+    border-bottom: 2px solid #e5e7eb; /* Kartlar arasına ayraç koy */
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+  .responsive-table td {
+    display: flex; /* Hücre içeriğini yan yana getir (başlık ve veri) */
+    justify-content: space-between; /* Başlık ve veriyi iki uca yasla */
+    padding: 0.5rem 0.25rem;
+    text-align: right; /* Veriyi sağa yasla */
+  }
+  .responsive-table td::before {
+    content: attr(data-label); /* data-label'daki metni başlık olarak göster */
+    font-weight: 600;
+    text-align: left;
+    margin-right: 1rem;
+  }
+}

@@ -23,21 +23,69 @@ function AdminHeader() {
 
   return (
     <header className="bg-white shadow">
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-        <Link href="/admin">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-        </Link>
-        {session && (
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500">Logged in as {session.user.email}</span>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Logout
-            </button>
+      {/* --- NİHAİ YERLEŞİM DÜZENİ --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        {/* Geniş ekran için 3'lü yapı */}
+        <div className="hidden sm:flex items-center justify-between">
+          {/* Sol Taraf: Oturum Bilgisi */}
+          <div className="w-1/3">
+            {session && (
+              <span className="text-xs text-gray-500">
+                Logged in as {session.user.email}
+              </span>
+            )}
           </div>
-        )}
+
+          {/* Orta: Başlık */}
+          <div className="w-1/3 text-center">
+            <Link href="/admin">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Admin Panel
+              </h1>
+            </Link>
+          </div>
+
+          {/* Sağ Taraf: Logout Butonu */}
+          <div className="w-1/3 text-right">
+            {session && (
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Logout
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobil için 2'li yapı */}
+        <div className="sm:hidden flex flex-col items-center gap-3">
+            {/* Üst Satır: Başlık */}
+            <div className="text-center">
+                <Link href="/admin">
+                <h1 className="text-2xl font-bold text-gray-900">
+                    Admin Panel
+                </h1>
+                </Link>
+            </div>
+
+            {/* Alt Satır: Oturum Bilgisi ve Logout */}
+            <div className="w-full flex items-center justify-between">
+                {session && (
+                    <>
+                        <span className="text-xs text-gray-500">
+                            Logged in as {session.user.email}
+                        </span>
+                        <button
+                            onClick={handleLogout}
+                            className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            Logout
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
       </div>
     </header>
   );

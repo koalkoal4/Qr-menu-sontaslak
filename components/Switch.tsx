@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 
+// --- DEĞİŞİKLİK: 'id' prop'u eklendi ---
 interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
+  id?: string; // id'yi opsiyonel bir prop olarak ekliyoruz
 }
 
-export default function Switch({ checked, onChange, disabled = false }: SwitchProps) {
+export default function Switch({ checked, onChange, disabled = false, id }: SwitchProps) {
   const [isEnabled, setIsEnabled] = useState(checked);
 
   const toggleSwitch = () => {
@@ -21,6 +23,7 @@ export default function Switch({ checked, onChange, disabled = false }: SwitchPr
   return (
     <button
       type="button"
+      id={id} // id'yi butona atıyoruz
       onClick={toggleSwitch}
       className={`${
         isEnabled ? 'bg-indigo-600' : 'bg-gray-200'
