@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'QR Menu App',
   description: 'Digital menu solution for restaurants',
-  themeColor: '#291c18',
 };
 
 export default function RootLayout({
