@@ -1,22 +1,26 @@
+/* app/globals.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: hsl(30 20% 98%);
-    --surface: hsl(30 20% 95%);
-    --primary: hsl(30 10% 20%);
-    --secondary: hsl(30 8% 45%);
-    --accent: hsl(25 80% 55%);
+    /* Açık Mod Renkleri */
+    --background: 210 40% 98%;    /* Çok Açık Gri */
+    --surface: 210 40% 96%;       /* Açık Gri */
+    --primary: 210 10% 23%;       /* Çok Koyu Mavi-Gri (Metin) */
+    --secondary: 210 9% 45%;      /* Koyu Gri (İkincil Metin) */
+    --accent: 345 95% 58%;        /* Canlı Kırmızı-Pembe (Vurgu) */
   }
  
   .dark {
-    --background: hsl(30 10% 12%);
-    --surface: hsl(30 10% 17%);
-    --primary: hsl(30 20% 95%);
-    --secondary: hsl(30 8% 65%);
-    --accent: hsl(25 85% 65%);
+    /* Yeni ve Geliştirilmiş Karanlık Mod Renkleri */
+    --background: 222 47% 11%;    /* Çok Koyu Mavi (Neredeyse Siyah) */
+    --surface: 222 47% 15%;       /* Koyu Mavi-Gri (Kartlar için) */
+    --primary: 210 40% 98%;       /* Çok Açık Gri (Ana Metin) */
+    --secondary: 210 40% 70%;     /* Orta-Açık Gri (İkincil Metin) */
+    --accent: 345 95% 68%;        /* Daha Parlak Vurgu Rengi */
   }
 }
 
@@ -25,25 +29,25 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Mobil Cihazlar İçin Otomatik Uyarlanabilir Tablo Stilleri */
+/* Mobil için responsif tablo stilleri (bu kısım aynı kalıyor) */
 @media (max-width: 640px) {
   .responsive-table thead {
-    display: none; /* Mobilde başlık satırını gizle */
+    display: none;
   }
   .responsive-table tr {
-    display: block; /* Her satırı bir blok (kart gibi) yap */
-    border-bottom: 2px solid #e5e7eb; /* Kartlar arasına ayraç koy */
+    display: block;
+    border-bottom: 2px solid hsl(var(--surface));
     margin-bottom: 1rem;
     padding-bottom: 1rem;
   }
   .responsive-table td {
-    display: flex; /* Hücre içeriğini yan yana getir (başlık ve veri) */
-    justify-content: space-between; /* Başlık ve veriyi iki uca yasla */
+    display: flex;
+    justify-content: space-between;
     padding: 0.5rem 0.25rem;
-    text-align: right; /* Veriyi sağa yasla */
+    text-align: right;
   }
   .responsive-table td::before {
-    content: attr(data-label); /* data-label'daki metni başlık olarak göster */
+    content: attr(data-label);
     font-weight: 600;
     text-align: left;
     margin-right: 1rem;

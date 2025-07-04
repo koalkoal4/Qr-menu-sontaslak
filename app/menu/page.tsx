@@ -1,3 +1,5 @@
+// app/menu/page.tsx
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -27,12 +29,12 @@ function CategoryHeader({ category, onVisible }: CategoryHeaderProps) {
 
   return (
     <div ref={ref} id={`category-${category.id}`} className="scroll-mt-16">
-      {/* Adım 1: h2 etiketi güncellendi */}
-      <h2 className="text-2xl font-bold py-4 bg-background dark:bg-dark-background">
+      {/* "dark:" ön eki kaldırıldı. */}
+      <h2 className="text-2xl font-bold py-4 bg-background">
         {category.name}
       </h2>
-      {/* Adım 1: hr etiketi güncellendi */}
-      <hr className="border-surface dark:border-dark-surface mb-2"/>
+      {/* "dark:" ön eki kaldırıldı. */}
+      <hr className="border-surface mb-2"/>
     </div>
   );
 }
@@ -57,19 +59,19 @@ function StickyNav({ categories, activeCategoryId, onCategoryClick }: StickyNavP
   }, [activeCategoryId]);
 
   return (
-    // Adım 2: nav etiketi güncellendi
-    <nav className="sticky top-0 z-10 bg-background dark:bg-dark-background py-2 shadow-sm">
+    // "dark:" ön eki kaldırıldı.
+    <nav className="sticky top-0 z-10 bg-background py-2 shadow-sm">
       <div className="flex space-x-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {categories.map((cat) => (
           <button
             key={cat.id}
             ref={activeCategoryId === cat.id ? activeRef : null}
             onClick={() => onCategoryClick(cat.id)}
-            // Adım 2: button etiketinin sınıfları güncellendi
+            // "dark:" ön eki kaldırıldı.
             className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-colors duration-300 ${
               activeCategoryId === cat.id
                 ? 'bg-accent text-white'
-                : 'bg-surface dark:bg-dark-surface text-secondary'
+                : 'bg-surface text-secondary'
             }`}
           >
             {cat.name}
@@ -162,8 +164,8 @@ export default function MenuPage() {
   if (isLoading) {
     return (
         <div className="p-4">
-            {/* Adım 3: Yükleme ekranındaki div güncellendi */}
-            <div className="sticky top-0 flex space-x-3 p-2 bg-background dark:bg-dark-background">
+            {/* "dark:" ön eki kaldırıldı. */}
+            <div className="sticky top-0 flex space-x-3 p-2 bg-background">
                 {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-24 rounded-full" />)}
             </div>
             <Skeleton className="h-8 w-1/2 my-4" />

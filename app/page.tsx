@@ -88,7 +88,7 @@ function CategoryCard({ category }: { category: Category }) {
 
   return (
     <Link href={`/menu#category-${category.id}`} className="block group">
-      <div className="relative overflow-hidden rounded-lg shadow-lg bg-surface dark:bg-dark-surface">
+      <div className="relative overflow-hidden rounded-lg shadow-lg bg-surface">
         <div className="w-full aspect-square">
           {imageUrl && (
             <Image
