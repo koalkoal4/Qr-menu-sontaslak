@@ -1,3 +1,5 @@
+// app/layout.tsx
+
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -5,16 +7,18 @@ import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
+// --- GÜNCELLEME BURADA ---
 export const metadata: Metadata = {
   title: 'QR Menu App',
   description: 'Digital menu solution for restaurants',
-  themeColor: [
-    // Aydınlık mod için renk (globals.css'teki --background rengine yakın)
-    { media: '(prefers-color-scheme: light)', color: '#fbfcfe' }, 
-    // Karanlık mod için renk (globals.css'teki --background rengine yakın)
-    { media: '(prefers-color-scheme: dark)', color: '#10172c' },
-  ],
+  // Viewport ayarını güncelliyoruz. 'viewport-fit=cover' en önemli kısımdır.
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+  },
 };
+// --- GÜNCELLEMENİN SONU ---
 
 export default function RootLayout({
   children,
