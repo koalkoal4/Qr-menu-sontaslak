@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Category } from '@/lib/types';
 import Image from 'next/image';
 
-// Adım 1: Formun sorumlu olduğu alanları net bir şekilde tanımlayan yeni bir tip oluşturuyoruz.
 export type CategoryFormData = {
   name: string;
   description: string | null;
@@ -11,10 +10,10 @@ export type CategoryFormData = {
   is_available: boolean;
 };
 
-// Adım 2: onSave prop'unun beklentisini yeni tipimizle güncelliyoruz.
 type CategoryFormProps = {
   initialData?: Category;
-  onSave: (formData: CategoryFormData, imageFile?: File | null) => void;
+  // DÜZELTME: onSave fonksiyonunun bir Promise döndürebileceğini belirtiyoruz.
+  onSave: (formData: CategoryFormData, imageFile?: File | null) => void | Promise<void>;
   isSaving: boolean;
 };
 
@@ -43,7 +42,6 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Adım 3: Sadece formun sorumlu olduğu verileri içeren bir nesne oluşturup gönderiyoruz.
     onSave(
       {
         name,
