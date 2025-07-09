@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import CategoryForm, { CategoryFormData } from '@/components/CategoryForm'; // Form verisi tipini import et
+import CategoryForm, { CategoryFormData } from '@/components/CategoryForm'; // CategoryFormData'yı import ediyoruz
 
 export default function NewCategoryPage() {
   const supabase = createClientComponentClient();
@@ -11,34 +11,30 @@ export default function NewCategoryPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // handleSave fonksiyonunu yeni form verisi tipine göre güncelliyoruz
   const handleSave = async (formData: CategoryFormData, imageFile?: File | null) => {
     setIsSaving(true);
     setError(null);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Kullanıcı doğrulanmamış.");
+      if (!user) throw new Error("User is not authenticated.");
 
-      // 1. Kullanıcının ait olduğu işletmeyi bul
+      // Kullanıcının business_id'sini bul
       const { data: memberData, error: memberError } = await supabase
         .from('business_members')
         .select('business_id')
         .eq('user_id', user.id)
         .single();
       
-      if (memberError || !memberData) {
-        throw new Error("Bu kullanıcı için ilişkili bir işletme bulunamadı.");
-      }
-      const businessId = memberData.business_id;
+      if (memberError) throw memberError;
 
-      // 2. Veritabanına eklenecek nesneye business_id'yi ekle
+      // Form verilerini ve business_id'yi birleştirerek veritabanına gönder
       const dataToInsert = { 
         ...formData, 
-        user_id: user.id, 
-        image_url: null, 
-        business_id: businessId // business_id'yi ekle
+        business_id: memberData.business_id 
       };
-      
+
       const { data: newCategory, error: insertError } = await supabase
         .from('categories')
         .insert(dataToInsert)
@@ -47,10 +43,10 @@ export default function NewCategoryPage() {
       
       if (insertError) throw insertError;
 
-      // 3. Resim varsa yükle ve kategoriyi güncelle (bu kısım aynı kalabilir)
+      // Resim yükleme mantığı (değişiklik yok)
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${businessId}/${newCategory.id}.${fileExt}`; // Dosya yolunu daha organize yapalım
+        const fileName = `${newCategory.id}-${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('category-images')
@@ -69,8 +65,8 @@ export default function NewCategoryPage() {
       router.push('/admin?tab=categories');
       router.refresh();
     } catch (err) {
-      console.error('Kategori oluşturma hatası:', err);
-      setError(err instanceof Error ? err.message : 'Kategori oluşturulamadı.');
+      console.error('Error creating category:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create category.');
     } finally {
       setIsSaving(false);
     }

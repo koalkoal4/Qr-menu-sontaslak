@@ -2,36 +2,29 @@ import { useState } from 'react';
 import { Category } from '@/lib/types';
 import Image from 'next/image';
 
-// Formun sorumlu olduğu alanları net bir şekilde tanımlıyoruz.
+// Adım 1: Formun sorumlu olduğu alanları net bir şekilde tanımlayan yeni bir tip oluşturuyoruz.
 export type CategoryFormData = {
   name: string;
   description: string | null;
   display_order: number;
   name_position: string;
+  is_available: boolean;
 };
 
+// Adım 2: onSave prop'unun beklentisini yeni tipimizle güncelliyoruz.
 type CategoryFormProps = {
   initialData?: Category;
-  // onSave prop'u artık sadece formun kendi verilerini ve resim dosyasını iletiyor.
   onSave: (formData: CategoryFormData, imageFile?: File | null) => void;
   isSaving: boolean;
 };
-
-const positionOptions = [
-    { value: 'bottom-left', label: 'Sol Alt' },
-    { value: 'bottom-center', label: 'Orta Alt' },
-    { value: 'bottom-right', label: 'Sağ Alt' },
-    { value: 'center', label: 'Tam Orta' },
-    { value: 'top-left', label: 'Sol Üst' },
-    { value: 'top-center', label: 'Orta Üst' },
-    { value: 'top-right', label: 'Sağ Üst' },
-];
 
 export default function CategoryForm({ initialData, onSave, isSaving }: CategoryFormProps) {
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [displayOrder, setDisplayOrder] = useState(initialData?.display_order || 0);
   const [namePosition, setNamePosition] = useState(initialData?.name_position || 'bottom-left');
+  const [isAvailable, setIsAvailable] = useState(initialData?.is_available ?? true);
+  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.image_url 
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/category-images/${initialData.image_url}` 
@@ -50,12 +43,14 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Adım 3: Sadece formun sorumlu olduğu verileri içeren bir nesne oluşturup gönderiyoruz.
     onSave(
       {
         name,
-        description: description || null,
+        description,
         display_order: displayOrder,
         name_position: namePosition,
+        is_available: isAvailable,
       },
       imageFile
     );
@@ -79,7 +74,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
       
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-          Kategori Resmi (İsteğe Bağlı)
+          Kategori Görseli (İsteğe Bağlı)
         </label>
         <div className="mt-2 flex items-center gap-x-4">
           {previewUrl ? (
@@ -120,7 +115,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
       
       <div>
         <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700">
-          Gösterim Sırası
+          Görünüm Sırası
         </label>
         <input
           type="number"
@@ -132,7 +127,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           required
         />
       </div>
-      
+
       <div>
         <label htmlFor="namePosition" className="block text-sm font-medium text-gray-700">
           İsim Pozisyonu
@@ -144,14 +139,29 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
           className={inputStyle}
           required
         >
-          {positionOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+            <option value='bottom-left'>Sol Alt</option>
+            <option value='bottom-center'>Orta Alt</option>
+            <option value='bottom-right'>Sağ Alt</option>
+            <option value='center'>Tam Orta</option>
+            <option value='top-left'>Sol Üst</option>
+            <option value='top-center'>Orta Üst</option>
+            <option value='top-right'>Sağ Üst</option>
         </select>
       </div>
 
+      <div className="flex items-center">
+        <input
+          id="isAvailable"
+          type="checkbox"
+          checked={isAvailable}
+          onChange={(e) => setIsAvailable(e.target.checked)}
+          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+        />
+        <label htmlFor="isAvailable" className="ml-2 block text-sm text-gray-700">
+          Menüde Aktif
+        </label>
+      </div>
+      
       <button
         type="submit"
         disabled={isSaving}
