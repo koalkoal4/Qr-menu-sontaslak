@@ -1,10 +1,7 @@
-// components/CategoryForm.tsx
-
 import { useState } from 'react';
 import { Category } from '@/lib/types';
 import Image from 'next/image';
 
-// Formun sorumlu olduğu alanları net bir şekilde tanımlayan tip.
 export type CategoryFormData = {
   name: string;
   description: string | null;
@@ -13,9 +10,9 @@ export type CategoryFormData = {
   is_available: boolean;
 };
 
-// onSave prop'unun beklentisini güncelliyoruz.
 type CategoryFormProps = {
   initialData?: Category;
+  // DÜZELTME: onSave fonksiyonunun bir Promise döndürebileceğini belirtiyoruz.
   onSave: (formData: CategoryFormData, imageFile?: File | null) => void | Promise<void>;
   isSaving: boolean;
 };
@@ -43,7 +40,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     onSave(
       {
@@ -59,9 +56,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Formun içeriği (JSX) öncekiyle aynı, burada tekrar göstermeye gerek yok */}
-      {/* ... form alanları ... */}
-       <div>
+      <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           Kategori Adı
         </label>

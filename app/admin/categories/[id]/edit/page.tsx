@@ -4,7 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Category } from '@/lib/types';
-import CategoryForm, { CategoryFormData } from '@/components/CategoryForm';
+import CategoryForm, { CategoryFormData } from '@/components/CategoryForm'; // CategoryFormData'yı import ediyoruz
 
 export default function CategoryEditPage() {
   const router = useRouter();
@@ -45,6 +45,7 @@ export default function CategoryEditPage() {
     fetchCategoryData();
   }, [id, supabase]);
 
+  // handleSave fonksiyonunu yeni form verisi tipine göre güncelliyoruz
   const handleSave = async (formData: CategoryFormData, imageFile?: File | null) => {
     setIsSaving(true);
     setError(null);
@@ -52,6 +53,7 @@ export default function CategoryEditPage() {
     try {
       let imageUrl = category?.image_url || null;
 
+      // Resim yükleme mantığı (değişiklik yok)
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${id}-${Date.now()}.${fileExt}`;
@@ -67,11 +69,12 @@ export default function CategoryEditPage() {
         imageUrl = fileName;
       }
       
+      // Veritabanı güncelleme sorgusunu form verilerine göre düzenliyoruz
       const { error: updateError } = await supabase
         .from('categories')
         .update({ 
-            ...formData,
-            image_url: imageUrl
+            ...formData, // Formdan gelen tüm güncel veriler
+            image_url: imageUrl // Resim URL'sini de ekle
         })
         .eq('id', id);       
 

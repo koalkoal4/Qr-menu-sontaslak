@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import CategoryForm, { CategoryFormData } from '@/components/CategoryForm';
+import CategoryForm, { CategoryFormData } from '@/components/CategoryForm'; // CategoryFormData'yı import ediyoruz
 
 export default function NewCategoryPage() {
   const supabase = createClientComponentClient();
@@ -11,6 +11,7 @@ export default function NewCategoryPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // handleSave fonksiyonunu yeni form verisi tipine göre güncelliyoruz
   const handleSave = async (formData: CategoryFormData, imageFile?: File | null) => {
     setIsSaving(true);
     setError(null);
@@ -19,6 +20,7 @@ export default function NewCategoryPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User is not authenticated.");
 
+      // Kullanıcının business_id'sini bul
       const { data: memberData, error: memberError } = await supabase
         .from('business_members')
         .select('business_id')
@@ -27,6 +29,7 @@ export default function NewCategoryPage() {
       
       if (memberError) throw memberError;
 
+      // Form verilerini ve business_id'yi birleştirerek veritabanına gönder
       const dataToInsert = { 
         ...formData, 
         business_id: memberData.business_id 
@@ -40,6 +43,7 @@ export default function NewCategoryPage() {
       
       if (insertError) throw insertError;
 
+      // Resim yükleme mantığı (değişiklik yok)
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${newCategory.id}-${Date.now()}.${fileExt}`;
