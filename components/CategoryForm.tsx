@@ -2,9 +2,18 @@ import { useState } from 'react';
 import { Category } from '@/lib/types';
 import Image from 'next/image';
 
+// Formun sorumlu olduğu alanları net bir şekilde tanımlıyoruz.
+export type CategoryFormData = {
+  name: string;
+  description: string | null;
+  display_order: number;
+  name_position: string;
+};
+
 type CategoryFormProps = {
   initialData?: Category;
-  onSave: (category: Omit<Category, 'id'>, imageFile?: File | null) => void;
+  // onSave prop'u artık sadece formun kendi verilerini ve resim dosyasını iletiyor.
+  onSave: (formData: CategoryFormData, imageFile?: File | null) => void;
   isSaving: boolean;
 };
 
@@ -29,9 +38,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
     : null
   );
 
-  // --- GÖRSEL İYİLEŞTİRME: Daha belirgin input stilleri ---
   const inputStyle = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
-  // --- DEĞİŞİKLİĞİN SONU ---
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,8 +55,8 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         name,
         description: description || null,
         display_order: displayOrder,
-        name_position: namePosition, // Bu satırı ekleyin
-      } as Omit<Category, 'id'>,
+        name_position: namePosition,
+      },
       imageFile
     );
   };
@@ -58,7 +65,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Category Name
+          Kategori Adı
         </label>
         <input
           type="text"
@@ -72,7 +79,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
       
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-          Category Image (Optional)
+          Kategori Resmi (İsteğe Bağlı)
         </label>
         <div className="mt-2 flex items-center gap-x-4">
           {previewUrl ? (
@@ -100,7 +107,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
       
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description (Optional)
+          Açıklama (İsteğe Bağlı)
         </label>
         <textarea
           id="description"
@@ -113,7 +120,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
       
       <div>
         <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700">
-          Display Order
+          Gösterim Sırası
         </label>
         <input
           type="number"
@@ -126,7 +133,6 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         />
       </div>
       
-
       <div>
         <label htmlFor="namePosition" className="block text-sm font-medium text-gray-700">
           İsim Pozisyonu
@@ -151,7 +157,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
         disabled={isSaving}
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
-        {isSaving ? 'Saving...' : 'Save Category'}
+        {isSaving ? 'Kaydediliyor...' : 'Kategoriyi Kaydet'}
       </button>
     </form>
   );

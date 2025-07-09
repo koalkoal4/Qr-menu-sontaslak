@@ -2,71 +2,52 @@ import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Product, Category } from '@/lib/types';
 
+// Formun sorumlu olduğu alanları tanımlıyoruz.
 export type ProductFormData = {
   name: string;
   description: string | null;
   price: number;
-  image_url: string | null;
   category_id: string;
   is_available: boolean;
-  display_order: number;
 };
 
 type ProductFormProps = {
   initialData?: Product;
   categories: Category[];
-  onSave: (product: ProductFormData) => void;
+  // onSave prop'u artık sadece form verilerini ve resim dosyasını iletiyor.
+  onSave: (formData: ProductFormData, imageFile?: File | null) => void;
+  isSaving: boolean;
 };
 
-export default function ProductForm({ initialData, categories, onSave }: ProductFormProps) {
-  const supabase = createClientComponentClient();
+export default function ProductForm({ initialData, categories, onSave, isSaving }: ProductFormProps) {
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [price, setPrice] = useState(initialData?.price || 0);
   const [categoryId, setCategoryId] = useState(initialData?.category_id?.toString() || '');
   const [isAvailable, setIsAvailable] = useState(initialData?.is_available ?? true);
-  const [image, setImage] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // --- GÖRSEL İYİLEŞTİRME: Daha belirgin input stilleri ---
   const inputStyle = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm";
-  // --- DEĞİŞİKLİĞİN SONU ---
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUploading(true);
-    
-    let imageUrl = initialData?.image_url || '';
-    
-    if (image) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const { error } = await supabase.storage
-        .from('product-images')
-        .upload(fileName, image);
-      
-      if (!error) {
-        imageUrl = fileName;
-      }
-    }
-
-    onSave({
-      name,
-      description,
-      price,
-      category_id: categoryId,
-      image_url: imageUrl,
-      is_available: isAvailable
-    } as ProductFormData);
-    
-    setIsUploading(false);
+    onSave(
+      {
+        name,
+        description,
+        price,
+        category_id: categoryId,
+        is_available: isAvailable,
+      },
+      imageFile
+    );
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Product Name
+          Ürün Adı
         </label>
         <input
           type="text"
@@ -80,21 +61,20 @@ export default function ProductForm({ initialData, categories, onSave }: Product
       
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
+          Açıklama
         </label>
         <textarea
           id="description"
-          value={description}
+          value={description || ''}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           className={inputStyle}
-          required
         />
       </div>
       
       <div>
         <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-          Price
+          Fiyat
         </label>
         <input
           type="number"
@@ -110,7 +90,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
       
       <div>
         <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-          Category
+          Kategori
         </label>
         <select
           id="category"
@@ -119,7 +99,7 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           className={inputStyle}
           required
         >
-          <option value="">Select a category</option>
+          <option value="">Bir kategori seçin</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -130,21 +110,21 @@ export default function ProductForm({ initialData, categories, onSave }: Product
       
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-          Product Image
+          Ürün Resmi
         </label>
         <input
           type="file"
           id="image"
           accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
+          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
           className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
         />
         {initialData?.image_url && (
           <div className="mt-2">
-            <p className="text-sm text-gray-500">Current image:</p>
+            <p className="text-sm text-gray-500">Mevcut resim:</p>
             <img
               src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${initialData.image_url}`}
-              alt="Current product"
+              alt="Mevcut ürün"
               className="h-20 w-20 object-cover rounded"
             />
           </div>
@@ -160,16 +140,16 @@ export default function ProductForm({ initialData, categories, onSave }: Product
           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
         />
         <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-          Available
+          Menüde Göster
         </label>
       </div>
       
       <button
         type="submit"
-        disabled={isUploading}
+        disabled={isSaving}
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
-        {isUploading ? 'Saving...' : 'Save Product'}
+        {isSaving ? 'Kaydediliyor...' : 'Ürünü Kaydet'}
       </button>
     </form>
   );

@@ -1,12 +1,10 @@
-// components/AdminDashboard.tsx
-
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Product, Category, Profile } from '@/lib/types';
+import { Product, Category, Business } from '@/lib/types';
 import SimpleModal from '@/components/SimpleModal';
 import Switch from '@/components/Switch';
 import SettingsForm from '@/components/SettingsForm';
@@ -35,7 +33,8 @@ type ProductsByCategory = {
   [categoryId: string]: Product[];
 }
 
-// CategoryRow ve diğer yardımcı bileşenlerde değişiklik yok.
+// --- YARDIMCI BİLEŞENLER ---
+// Bu bileşenlerin projenizde doğru ve mevcut olduğunu varsayıyoruz.
 function CategoryRow({ id, category, openDeleteModal, onStatusChange }: { id: string, category: Category, openDeleteModal: Function, onStatusChange: Function }) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -59,8 +58,8 @@ function CategoryRow({ id, category, openDeleteModal, onStatusChange }: { id: st
         />
       </td>
       <td data-label="Actions" className="text-right">
-        <button onClick={() => router.push(`/admin/categories/${category.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-3 font-medium">Edit</button>
-        <button onClick={() => openDeleteModal('category', category.id)} className="text-red-600 hover:text-red-900 font-medium">Delete</button>
+        <button onClick={() => router.push(`/admin/categories/${category.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-3 font-medium">Düzenle</button>
+        <button onClick={() => openDeleteModal('category', category.id)} className="text-red-600 hover:text-red-900 font-medium">Sil</button>
       </td>
     </tr>
   );
@@ -87,7 +86,7 @@ function ProductRow({ id, product, openDeleteModal, onStatusChange }: { id: stri
               <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="w-full sm:w-auto flex items-center justify-between">
                       <label htmlFor={`available-${product.id}`} className="text-sm font-medium text-gray-700 sm:hidden">
-                          Available
+                          Mevcut
                       </label>
                       <Switch
                           checked={product.is_available}
@@ -99,12 +98,12 @@ function ProductRow({ id, product, openDeleteModal, onStatusChange }: { id: stri
                       <button 
                         onClick={() => router.push(`/admin/products/${product.id}/edit`)} 
                         className="flex-1 sm:flex-initial justify-center text-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
-                          Edit
+                          Düzenle
                       </button>
                       <button 
                         onClick={() => openDeleteModal('product', product.id)} 
                         className="flex-1 sm:flex-initial justify-center text-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-red-700 bg-red-100 hover:bg-red-200">
-                          Delete
+                          Sil
                       </button>
                   </div>
               </div>
@@ -136,20 +135,19 @@ function CategoryDropZone({ id, category, products, openDeleteModal, onStatusCha
   );
 }
 
-
+// --- ANA DASHBOARD BİLEŞENİ ---
 export default function AdminDashboard() {
   const { session, isLoading } = useAuth();
   const supabase = createClientComponentClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const businessName = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Our Business';
   
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'settings'>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [productsByCategory, setProductsByCategory] = useState<ProductsByCategory>({});
 
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{type: 'product' | 'category', id: string} | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -157,54 +155,55 @@ export default function AdminDashboard() {
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const refreshPreview = useCallback(() => { setPreviewKey(Date.now()); }, []);
 
-  useEffect(() => {
-    const newProductsByCategory = categories.reduce((acc, category) => {
-      acc[category.id] = products
-        .filter(p => p.category_id === category.id)
-        .sort((a, b) => a.display_order - b.display_order);
-      return acc;
-    }, {} as ProductsByCategory);
-    setProductsByCategory(newProductsByCategory);
-  }, [products, categories]);
-
+  // --- DÜZELTİLMİŞ ve DOĞRU fetchData MANTIĞI ---
   const fetchData = useCallback(async () => {
     setIsLoadingData(true);
     try {
+        // Adım 1: Giriş yapmış kullanıcıyı al
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setIsLoadingData(false);
           return;
         }
 
-        const [productsRes, categoriesRes, profileRes] = await Promise.all([
-            supabase.from('products').select('*'),
-            supabase.from('categories').select('*').order('display_order', { ascending: true }),
-            supabase.from('profiles').select('*').eq('id', user.id).single()
+        // Adım 2: Kullanıcının hangi işletmeye üye olduğunu bul
+        const { data: memberData, error: memberError } = await supabase
+            .from('business_members')
+            .select('business_id')
+            .eq('user_id', user.id)
+            .single();
+
+        if (memberError || !memberData) {
+            console.error("HATA: Kullanıcıya ait işletme bulunamadı!", memberError);
+            setIsLoadingData(false);
+            return;
+        }
+        const businessId = memberData.business_id;
+        
+        // Adım 3: Bulunan businessId ile sadece o işletmeye ait verileri çek
+        const [productsRes, categoriesRes, businessRes] = await Promise.all([
+            supabase.from('products').select('*').eq('business_id', businessId),
+            supabase.from('categories').select('*').eq('business_id', businessId).order('display_order'),
+            supabase.from('businesses').select('*').eq('id', businessId).single()
         ]);
 
         if (productsRes.error) throw productsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
-        if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
-
+        if (businessRes.error) throw businessRes.error;
+        
+        // Adım 4: State'leri güvenli bir şekilde güncelle
         setProducts(productsRes.data || []);
         setCategories(categoriesRes.data || []);
-        setProfile(profileRes.data || null);
+        setBusiness(businessRes.data || null);
 
     } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("fetchData içinde kritik bir hata meydana geldi:", error);
     } finally {
         setIsLoadingData(false);
     }
@@ -222,6 +221,16 @@ export default function AdminDashboard() {
     }
   }, [session, isLoading, searchParams, fetchData]);
 
+  useEffect(() => {
+    const newProductsByCategory = categories.reduce((acc, category) => {
+      acc[category.id] = products
+        .filter(p => p.category_id === category.id)
+        .sort((a, b) => a.display_order - b.display_order);
+      return acc;
+    }, {} as ProductsByCategory);
+    setProductsByCategory(newProductsByCategory);
+  }, [products, categories]);
+
   const handleStatusChange = async (type: 'product' | 'category', id: string, newStatus: boolean) => {
     const table = type === 'product' ? 'products' : 'categories';
     const { error } = await supabase.from(table).update({ is_available: newStatus }).eq('id', id);
@@ -229,7 +238,12 @@ export default function AdminDashboard() {
       console.error(`Error updating ${type} status:`, error);
       fetchData(); 
     } else {
-      setProducts(prev => prev.map(p => (p.id === id ? { ...p, is_available: newStatus } : p)));
+      // Optimistic UI update
+      if(type === 'product') {
+        setProducts(prev => prev.map(p => (p.id === id ? { ...p, is_available: newStatus } : p)));
+      } else {
+        setCategories(prev => prev.map(c => (c.id === id ? { ...c, is_available: newStatus } : c)));
+      }
       refreshPreview(); 
     }
   };
@@ -243,7 +257,7 @@ export default function AdminDashboard() {
         setCategories(newOrderedCategories);
 
         const updatePromises = newOrderedCategories.map((category, index) =>
-            supabase.from('categories').update({ display_order: index }).eq('id', category.id).select()
+            supabase.from('categories').update({ display_order: index }).eq('id', category.id)
         );
         try {
             await Promise.all(updatePromises);
@@ -269,7 +283,6 @@ export default function AdminDashboard() {
       return;
     }
   
-    // UI'ı anında güncellemek için anlık durumu kopyala
     const newProductsByCategoryState = { ...productsByCategory };
     const sourceItems = Array.from(newProductsByCategoryState[activeContainer] || []);
     const destinationItems = Array.from(newProductsByCategoryState[overContainer] || []);
@@ -278,59 +291,43 @@ export default function AdminDashboard() {
     const draggedItem = sourceItems[activeIndex];
   
     if (activeContainer === overContainer) {
-      // 1. Aynı kategori içinde sıralama
       newProductsByCategoryState[activeContainer] = arrayMove(sourceItems, activeIndex, overIndex);
     } else {
-      // 2. Farklı kategoriler arası taşıma
-      // Öğeyi eski kategoriden kaldır
       newProductsByCategoryState[activeContainer] = sourceItems.filter(item => item.id !== activeId);
-      // Öğeyi yeni kategoriye ekle
       destinationItems.splice(overIndex >= 0 ? overIndex : destinationItems.length, 0, draggedItem);
       newProductsByCategoryState[overContainer] = destinationItems;
     }
   
     setProductsByCategory(newProductsByCategoryState);
   
-    // Veritabanı güncelleme işlemleri
     try {
       const updates = [];
-
-  
       if (activeContainer === overContainer) {
-        // Sadece tek bir kategorinin sıralamasını güncelle
         newProductsByCategoryState[activeContainer].forEach((product, index) => {
           updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
       } else {
-        // İki kategoriyi de güncelle
-        // 1. Taşınan ürünün kategori ID'sini güncelle
         updates.push(supabase.from('products').update({ category_id: overContainer }).eq('id', activeId));
-        // 2. Eski kategorinin sıralamasını güncelle
         newProductsByCategoryState[activeContainer].forEach((product, index) => {
           updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
-        // 3. Yeni kategorinin sıralamasını güncelle
         newProductsByCategoryState[overContainer].forEach((product, index) => {
           updates.push(supabase.from('products').update({ display_order: index }).eq('id', product.id));
         });
       }
-  
       await Promise.all(updates);
       refreshPreview();
     } catch (error) {
       console.error("Drag-and-drop update failed:", error);
-      fetchData(); // Hata durumunda veriyi yeniden çekerek UI'ı düzelt
+      fetchData();
     }
   };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
     try {
-      if (itemToDelete.type === 'product') {
-        await supabase.from('products').delete().eq('id', itemToDelete.id);
-      } else {
-        await supabase.from('categories').delete().eq('id', itemToDelete.id);
-      }
+      const table = itemToDelete.type === 'product' ? 'products' : 'categories';
+      await supabase.from(table).delete().eq('id', itemToDelete.id);
       fetchData();
       refreshPreview();
     } catch (error) {
@@ -345,9 +342,9 @@ export default function AdminDashboard() {
     setItemToDelete({ type, id });
     setIsDeleteModalOpen(true);
   };
-  
+
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="text-xl">Loading dashboard...</div></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-xl">Yükleniyor...</div></div>;
   }
 
   return (
@@ -355,30 +352,30 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-grow bg-white shadow rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-2">Welcome, {session?.user?.email}</h2>
-            <p className="text-base mb-6">You are managing <span className="font-bold">{businessName}</span></p>
+            <h2 className="text-xl font-semibold mb-2">Hoş geldiniz, {session?.user?.email}</h2>
+            <p className="text-base mb-6">Yönetilen İşletme: <span className="font-bold">{business?.name || 'İşletmeniz'}</span></p>
 
             <div className="border-b border-gray-200 mb-4 overflow-x-auto">
               <div className="flex -mb-px">
-                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'products' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('products')}>Products</button>
-                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'categories' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('categories')}>Categories</button>
-                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('settings')}>Settings</button>
+                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'products' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('products')}>Ürünler</button>
+                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'categories' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('categories')}>Kategoriler</button>
+                <button className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`} onClick={() => setActiveTab('settings')}>Ayarlar</button>
               </div>
             </div>
             
-            {isLoadingData ? <div className="flex justify-center items-center h-40"><div className="text-lg">Loading data...</div></div>
+            {isLoadingData ? <div className="flex justify-center items-center h-40"><div className="text-lg">Veriler yükleniyor...</div></div>
               : activeTab === 'settings' ? (
                 <div>
-                    <h3 className="text-lg font-medium">Appearance Settings</h3>
-                    <p className="text-sm text-gray-500 mb-4">Update your menu's cover image and social links.</p>
-                    {profile ? <SettingsForm initialProfile={profile} onUpdate={() => { fetchData(); refreshPreview(); }} /> : <p>Loading settings...</p>}
+                    <h3 className="text-lg font-medium">Görünüm Ayarları</h3>
+                    <p className="text-sm text-gray-500 mb-4">Menünüzün kapak fotoğrafını ve sosyal medya linklerini güncelleyin.</p>
+                    {business ? <SettingsForm initialBusiness={business} onUpdate={() => { fetchData(); refreshPreview(); }} /> : <p>Ayarlar yükleniyor...</p>}
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                    <h3 className="text-lg font-medium">{activeTab === 'products' ? 'Product Management' : 'Category Management'}</h3>
+                    <h3 className="text-lg font-medium">{activeTab === 'products' ? 'Ürün Yönetimi' : 'Kategori Yönetimi'}</h3>
                     <button onClick={() => router.push(`/admin/${activeTab}/new`)} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 w-full sm:w-auto">
-                      {activeTab === 'products' ? 'New Product' : 'New Category'}
+                      {activeTab === 'products' ? 'Yeni Ürün Ekle' : 'Yeni Kategori Ekle'}
                     </button>
                   </div>
                   {activeTab === 'products' ? (
@@ -402,10 +399,10 @@ export default function AdminDashboard() {
                         <table className="min-w-full responsive-table">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İsim</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sıralama</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y sm:divide-y-0 divide-gray-200">
@@ -421,14 +418,14 @@ export default function AdminDashboard() {
           
           <div className="lg:sticky lg:top-6 flex-shrink-0 w-full lg:w-1/3">
             <div className="bg-white shadow rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">Customer Menu Preview</h2>
-              <iframe src={`/?key=${previewKey}`} className="w-full h-[500px] sm:h-[600px] border border-gray-200 rounded" title="Customer Menu Preview" />
+              <h2 className="text-xl font-semibold mb-4">Müşteri Menü Önizlemesi</h2>
+              <iframe src={`/?key=${previewKey}`} className="w-full h-[500px] sm:h-[600px] border border-gray-200 rounded" title="Müşteri Menü Önizlemesi" />
             </div>
           </div>
         </div>
       </div>
 
-      <SimpleModal isOpen={isDeleteModalOpen} title={`Delete ${itemToDelete?.type}`} message={`Are you sure you want to delete this ${itemToDelete?.type}? This action cannot be undone.`} confirmText="Delete" cancelText="Cancel" onConfirm={handleDelete} onCancel={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }} />
+      <SimpleModal isOpen={isDeleteModalOpen} title={`${itemToDelete?.type === 'product' ? 'Ürünü' : 'Kategoriyi'} Sil`} message={`Bu ${itemToDelete?.type === 'product' ? 'ürünü' : 'kategoriyi'} silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`} confirmText="Sil" cancelText="İptal" onConfirm={handleDelete} onCancel={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }} />
     </div>
   );
 }
