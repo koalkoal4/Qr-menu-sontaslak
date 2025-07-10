@@ -112,25 +112,69 @@ function ProductRow({ id, product, openDeleteModal, onStatusChange }: { id: stri
     );
 }
 
-function CategoryDropZone({ id, category, products, openDeleteModal, onStatusChange }: { id: string, category: Category, products: Product[], openDeleteModal: Function, onStatusChange: Function }) {
+function CategoryDropZone({ 
+  id, 
+  category, 
+  products, 
+  openDeleteModal, 
+  onStatusChange, 
+  isCollapsed,
+  onToggleCollapse
+}: { 
+  id: string, 
+  category: Category, 
+  products: Product[], 
+  openDeleteModal: Function, 
+  onStatusChange: Function,
+  isCollapsed: boolean,
+  onToggleCollapse: () => void
+}) {
   const { setNodeRef } = useDroppable({
     id: id,
     data: { type: 'category' }
   });
 
   return (
-    <div key={id}>
-      <h4 className="text-lg font-bold mb-2 p-2">{category.name}</h4>
-      <SortableContext id={id} items={products.map(p => p.id)} strategy={verticalListSortingStrategy}>
-        <div ref={setNodeRef} className="space-y-2 min-h-[50px] bg-gray-50 p-2 rounded-md border">
-          {products.map(product => <ProductRow key={product.id} id={product.id} product={product} openDeleteModal={openDeleteModal} onStatusChange={onStatusChange} />)}
-          {products.length === 0 && (
-            <div className="flex items-center justify-center h-12 text-sm text-gray-400">
-              Bu kategoriye ürün sürükleyin
+    <div className="bg-white p-2 rounded-lg shadow-sm border">
+      {/* Tıklanabilir Başlık Alanı */}
+      <div 
+        onClick={onToggleCollapse} 
+        className="flex items-center justify-between cursor-pointer p-2 rounded-md hover:bg-gray-50"
+      >
+        <h4 className="text-lg font-bold">{category.name}</h4>
+        <svg 
+          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isCollapsed ? 'transform -rotate-90' : ''}`} 
+          fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </div>
+
+      {/* Açılır Kapanır Ürün Listesi Alanı */}
+      {/* Koşullu render edilen kısım burası */}
+      {!isCollapsed && (
+        <div className="mt-2 pl-2 pr-1 py-1">
+          <SortableContext id={id} items={products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+            <div ref={setNodeRef} className="space-y-2 min-h-[50px]">
+              {products.length > 0 ? (
+                products.map(product => (
+                  <ProductRow 
+                    key={product.id} 
+                    id={product.id} 
+                    product={product} 
+                    openDeleteModal={openDeleteModal} 
+                    onStatusChange={onStatusChange} 
+                  />
+                ))
+              ) : (
+                <div className="flex items-center justify-center h-12 text-sm text-gray-400">
+                  Bu kategoriye ürün sürükleyin
+                </div>
+              )}
             </div>
-          )}
+          </SortableContext>
         </div>
-      </SortableContext>
+      )}
     </div>
   );
 }
@@ -153,6 +197,20 @@ export default function AdminDashboard() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [previewKey, setPreviewKey] = useState(Date.now());
 
+  const [collapsedCategories, setCollapsedCategories] = useState(new Set<string>());
+  const toggleCategoryCollapse = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(categoryId)) {
+            newSet.delete(categoryId);
+        } else {
+            newSet.add(categoryId);
+        }
+        return newSet;
+    });
+};
+
+  
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -380,7 +438,7 @@ export default function AdminDashboard() {
                   </div>
                   {activeTab === 'products' ? (
                     <DndContext sensors={sensors} collisionDetection={rectIntersection} onDragEnd={handleProductDragEnd}>
-                      <div className="space-y-8">
+                      <div className="space-y-4">
                         {categories.map(category => (
                           <CategoryDropZone
                             key={category.id}
@@ -389,6 +447,8 @@ export default function AdminDashboard() {
                             products={productsByCategory[category.id] || []}
                             openDeleteModal={openDeleteModal}
                             onStatusChange={handleStatusChange}
+                            isCollapsed={collapsedCategories.has(category.id)}
+                            onToggleCollapse={() => toggleCategoryCollapse(category.id)}
                           />
                         ))}
                       </div>
