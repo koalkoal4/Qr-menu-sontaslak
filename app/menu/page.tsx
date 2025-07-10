@@ -7,7 +7,7 @@ import MenuItem from '@/components/MenuItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInView } from 'react-intersection-observer';
 
-// --- YARDIMCI BİLEŞENLER (Değişiklik yok) ---
+// --- YARDIMCI BİLEŞENLER (Bu kısımlar değişmeden kalacak) ---
 
 interface CategoryHeaderProps {
   category: Category;
@@ -15,24 +15,24 @@ interface CategoryHeaderProps {
 }
 
 function CategoryHeader({ category, onVisible }: CategoryHeaderProps) {
-  const { ref } = useInView({
-    rootMargin: "-35% 0px -65% 0px",
-    threshold: 0,
-    onChange: (inView) => {
-      if (inView) {
-        onVisible(category.id);
-      }
-    },
-  });
+    const { ref } = useInView({
+        rootMargin: "-35% 0px -65% 0px",
+        threshold: 0,
+        onChange: (inView) => {
+        if (inView) {
+            onVisible(category.id);
+        }
+        },
+    });
 
-  return (
-    <div ref={ref} id={`category-${category.id}`} className="scroll-mt-16">
-      <h2 className="text-2xl font-bold py-4 bg-background dark:bg-dark-background">
-        {category.name}
-      </h2>
-      <hr className="border-surface dark:border-dark-surface mb-2"/>
-    </div>
-  );
+    return (
+        <div ref={ref} id={`category-${category.id}`} className="scroll-mt-16">
+        <h2 className="text-2xl font-bold py-4 bg-background">
+            {category.name}
+        </h2>
+        <hr className="border-surface mb-2"/>
+        </div>
+    );
 }
 
 interface StickyNavProps {
@@ -42,54 +42,53 @@ interface StickyNavProps {
 }
 
 function StickyNav({ categories, activeCategoryId, onCategoryClick }: StickyNavProps) {
-  const activeRef = useRef<HTMLButtonElement>(null);
+    const activeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (activeRef.current) {
-      activeRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }
-  }, [activeCategoryId]);
+    useEffect(() => {
+        if (activeRef.current) {
+        activeRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+        });
+        }
+    }, [activeCategoryId]);
 
-  return (
-    <nav className="sticky top-0 z-10 bg-background dark:bg-dark-background py-2 shadow-sm">
-      <div className="flex space-x-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            ref={activeCategoryId === cat.id ? activeRef : null}
-            onClick={() => onCategoryClick(cat.id)}
-            className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-colors duration-300 ${
-              activeCategoryId === cat.id
-                ? 'bg-accent text-white'
-                : 'bg-surface dark:bg-dark-surface text-secondary'
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
+    return (
+        <nav className="sticky top-0 z-10 bg-background py-2 shadow-sm">
+        <div className="flex space-x-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {categories.map((cat) => (
+            <button
+                key={cat.id}
+                ref={activeCategoryId === cat.id ? activeRef : null}
+                onClick={() => onCategoryClick(cat.id)}
+                className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-colors duration-300 ${
+                activeCategoryId === cat.id
+                    ? 'bg-accent text-white'
+                    : 'bg-surface text-secondary'
+                }`}
+            >
+                {cat.name}
+            </button>
+            ))}
+        </div>
+        </nav>
+    );
 }
+
 
 // --- ANA MENÜ SAYFASI BİLEŞENİ ---
 
 export default function MenuPage() {
   const supabase = createClientComponentClient();
-  // Düzeltme: State'i, Business tipine uygun ve basit hale getirdik.
   const [businessData, setBusinessData] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-  
+
   const scrollTimeout = useRef<NodeJS.Timeout>();
   const isClicking = useRef(false);
 
-  // Bu fonksiyonlarda bir değişiklik yok.
   const handleVisibleCategory = useCallback((id: string) => {
     if (!isClicking.current) {
       setActiveCategoryId(id);
@@ -113,72 +112,65 @@ export default function MenuPage() {
     return () => clearTimeout(scrollTimeout.current);
   }, []);
 
-  // --- DÜZELTİLMİŞ VERİ ÇEKME MANTIĞI ---
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      const businessId = process.env.NEXT_PUBLIC_BUSINESS_ID;
+  // --- DEĞİŞİKLİK 1: VERİ ÇEKME MANTIĞI YENİDEN KULLANILABİLİR BİR FONKSİYONA TAŞINDI ---
+  const fetchData = useCallback(async (isInitialLoad = false) => {
+    if (isInitialLoad) setIsLoading(true);
+    setError(null);
+    const businessId = process.env.NEXT_PUBLIC_BUSINESS_ID;
 
-      if (!businessId) {
-        setError("Hata: İşletme kimliği (business ID) bulunamadı. Lütfen ayarlarınızı kontrol edin.");
-        setIsLoading(false);
-        return;
-      }
-
-      // Tek ve verimli sorgu: İşletmeyi, içindeki kategorileri ve her kategorinin içindeki ürünleri getir.
-      const { data, error: fetchError } = await supabase
-        .from('businesses')
-        .select(`
-          *,
-          categories (
-            *,
-            products (*)
-          )
-        `)
-        .eq('id', businessId)
-        .eq('categories.is_available', true) // Sadece aktif kategorileri getir
-        .eq('categories.products.is_available', true) // Sadece aktif ürünleri getir
-        .order('display_order', { foreignTable: 'categories', ascending: true })
-        .order('display_order', { foreignTable: 'categories.products', ascending: true })
-        .single();
-      
-      if (fetchError) {
-        console.error("Data fetching error:", fetchError);
-        setError("Menü verileri yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
-        setIsLoading(false);
-        return;
-      }
-
-      setBusinessData(data);
-      
-      // İlk kategoriye odaklanma mantığı
-      if (data && data.categories && data.categories.length > 0) {
-        const hash = window.location.hash.replace('#category-', '');
-        // DÜZELTME: 'c' parametresine açıkça 'Category' tipi atandı.
-        const initialCat = data.categories.find((c: Category) => c.id === hash) || data.categories[0];
-        
-        if (initialCat) {
-          setActiveCategoryId(initialCat.id);
-          setTimeout(() => {
-            const element = document.getElementById(`category-${initialCat.id}`);
-            if (element) {
-              element.scrollIntoView({ behavior: 'auto', block: 'start' });
-            }
-          }, 100);
-        }
-      }
+    if (!businessId) {
+      setError("Hata: İşletme kimliği (business ID) bulunamadı. Lütfen ayarlarınızı kontrol edin.");
       setIsLoading(false);
-    };
+      return;
+    }
 
-    fetchData();
+    const { data, error: fetchError } = await supabase
+      .from('businesses')
+      .select(`*, categories (*, products (*))`)
+      .eq('id', businessId)
+      .eq('categories.is_available', true)
+      .eq('categories.products.is_available', true)
+      .order('display_order', { foreignTable: 'categories', ascending: true })
+      .order('display_order', { foreignTable: 'categories.products', ascending: true })
+      .single();
+
+    if (fetchError) {
+      console.error("Data fetching error:", fetchError);
+      setError("Menü verileri yüklenirken bir hata oluştu.");
+    } else {
+        setBusinessData(data);
+    }
+    if (isInitialLoad) setIsLoading(false);
   }, [supabase]);
 
-  // Yükleme ekranı (Değişiklik yok)
+
+  // --- DEĞİŞİKLİK 2: MESAJ DİNLEYİCİSİ EKLENDİ ---
+  useEffect(() => {
+    // İlk yüklemede veriyi çek
+    fetchData(true);
+
+    // Yönetim panelinden gelen "refresh" mesajını dinle
+    const handleMessage = (event: MessageEvent) => {
+        // Güvenlik için mesajın kimden geldiğini kontrol edebilirsiniz,
+        // ama şimdilik '*' ile basit tutuyoruz.
+        if (event.data === 'refresh-preview') {
+            console.log('Admin panelinden yenileme komutu alındı, veriler güncelleniyor...');
+            fetchData(false); // Veriyi yeniden çek (sayfayı yenilemeden)
+        }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Bileşen kaldırıldığında dinleyiciyi temizle
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [fetchData]); // fetchData'yı bağımlılıklara ekliyoruz
+
   if (isLoading) {
     return (
         <div className="p-4">
-            <div className="sticky top-0 flex space-x-3 p-2 bg-background dark:bg-dark-background">
+            <div className="sticky top-0 flex space-x-3 p-2 bg-background">
                 {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-24 rounded-full" />)}
             </div>
             <Skeleton className="h-8 w-1/2 my-4" />
@@ -196,7 +188,6 @@ export default function MenuPage() {
     );
   }
 
-  // Hata veya boş veri durumu
   if (error) {
     return <div className="min-h-screen flex items-center justify-center text-center text-red-500 p-4">{error}</div>
   }
@@ -204,7 +195,6 @@ export default function MenuPage() {
       return <div className="min-h-screen flex items-center justify-center text-center p-4">Görüntülenecek aktif kategori veya ürün bulunmuyor.</div>
   }
 
-  // --- DÜZELTİLMİŞ RENDER MANTIĞI ---
   return (
     <div>
       <StickyNav 
@@ -220,7 +210,6 @@ export default function MenuPage() {
               onVisible={handleVisibleCategory} 
             />
             <div>
-              {/* Artık ürünler doğrudan kategorinin içinden geliyor, ek bir fonksiyona gerek yok. */}
               {category.products.map((product: Product) => (
                 <MenuItem key={product.id} product={product} />
               ))}

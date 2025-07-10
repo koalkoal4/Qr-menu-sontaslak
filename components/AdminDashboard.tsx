@@ -195,7 +195,6 @@ export default function AdminDashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{type: 'product' | 'category', id: string} | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [previewKey, setPreviewKey] = useState(Date.now());
 
   const [collapsedCategories, setCollapsedCategories] = useState(new Set<string>());
   const toggleCategoryCollapse = (categoryId: string) => {
@@ -217,7 +216,15 @@ export default function AdminDashboard() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const refreshPreview = useCallback(() => { setPreviewKey(Date.now()); }, []);
+  const refreshPreview = () => {
+    const iframe = document.getElementById('preview-iframe') as HTMLIFrameElement;
+    // iframe'in ve içindeki pencerenin var olduğundan emin oluyoruz
+    if (iframe && iframe.contentWindow) {
+      console.log('Önizlemeye "refresh-preview" mesajı gönderiliyor...');
+      // iframe'in içindeki pencereye mesajı yolluyoruz.
+      iframe.contentWindow.postMessage('refresh-preview', '*');
+    }
+  };
 
   // --- DÜZELTİLMİŞ ve DOĞRU fetchData MANTIĞI ---
   const fetchData = useCallback(async () => {
@@ -479,7 +486,12 @@ export default function AdminDashboard() {
           <div className="lg:sticky lg:top-6 flex-shrink-0 w-full lg:w-1/3">
             <div className="bg-white shadow rounded-lg p-4">
               <h2 className="text-xl font-semibold mb-4">Müşteri Menü Önizlemesi</h2>
-              <iframe src={`/?key=${previewKey}`} className="w-full h-[500px] sm:h-[600px] border border-gray-200 rounded" title="Müşteri Menü Önizlemesi" />
+              <iframe 
+              id="preview-iframe" // ID EKLEDİK
+              src="/" // ARTIK KEY PARAMETRESİNE GEREK YOK
+              className="w-full h-[500px] sm:h-[600px] border border-gray-200 rounded" 
+              title="Müşteri Menü Önizlemesi" 
+            />
             </div>
           </div>
         </div>
