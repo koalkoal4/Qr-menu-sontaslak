@@ -79,7 +79,7 @@ export default function SettingsForm({ initialBusiness, onUpdate }: SettingsForm
         </div>
         <div>
             <label htmlFor="cover" className="block text-sm font-medium text-gray-700">Kapak Fotoğrafı</label>
-            {previewUrl && <Image src={previewUrl} alt="Cover preview" width={400} height={200} className="mt-2 rounded-md object-cover"/>}
+            {previewUrl && <Image src={previewUrl} alt="Cover preview" width={400} height={200} className="mt-2 rounded-md object-cover" unoptimized={true} />}
             <input type="file" id="cover" onChange={handleImageChange} accept="image/*" className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4"/>
         </div>
         <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 bg-indigo-600 text-white rounded-md disabled:opacity-50">

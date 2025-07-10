@@ -82,6 +82,7 @@ export default function CategoryForm({ initialData, onSave, isSaving }: Category
               width={80}
               height={80}
               className="h-20 w-20 object-cover rounded-md"
+              unoptimized={true}
             />
           ) : (
             <div className="h-20 w-20 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
