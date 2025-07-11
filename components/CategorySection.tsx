@@ -6,12 +6,14 @@ interface CategorySectionProps {
   category: Category;
   products: Product[];
   isLoading?: boolean;
+  isPreview: boolean;
 }
 
 export default function CategorySection({ 
   category, 
   products, 
-  isLoading = false 
+  isLoading = false, 
+  isPreview
 }: CategorySectionProps) {
   if (isLoading) {
     return (
@@ -43,7 +45,7 @@ export default function CategorySection({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <MenuItem key={product.id} product={product} />
+            <MenuItem key={product.id} product={product} isPreview={isPreview} />
           ))}
         </div>
       )}

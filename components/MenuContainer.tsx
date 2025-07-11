@@ -7,6 +7,7 @@ import CategorySection from './CategorySection';
 import { Skeleton } from 'components/ui/skeleton';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { useSearchParams } from 'next/navigation';
 
 export default function MenuContainer() {
   const supabase = createClientComponentClient();
@@ -15,6 +16,8 @@ export default function MenuContainer() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === 'true';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,6 +137,7 @@ export default function MenuContainer() {
               key={category.id}
               category={category}
               products={products}
+              isPreview={isPreview}
             />
           ))}
         </div>
