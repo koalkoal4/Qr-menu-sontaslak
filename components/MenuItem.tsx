@@ -1,13 +1,12 @@
-// components/MenuItem.tsx
-
 import Image from 'next/image';
 import { Product } from '@/lib/types';
 
 interface MenuItemProps {
   product: Product;
+  isPreview: boolean;
 }
 
-export default function MenuItem({ product }: MenuItemProps) {
+export default function MenuItem({ product, isPreview }: MenuItemProps) {
   const imageUrl = product.image_url
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${product.image_url}`
     : null;
@@ -24,6 +23,7 @@ export default function MenuItem({ product }: MenuItemProps) {
             width={112}
             height={112}
             className="object-cover w-full h-full rounded-md"
+            unoptimized={isPreview}
           />
         )}
       </div>

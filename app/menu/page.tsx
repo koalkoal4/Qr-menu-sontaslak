@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Category, Product, Business } from '@/lib/types';
@@ -85,6 +86,8 @@ export default function MenuPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === 'true';
 
   const scrollTimeout = useRef<NodeJS.Timeout>();
   const isClicking = useRef(false);
@@ -211,7 +214,7 @@ export default function MenuPage() {
             />
             <div>
               {category.products.map((product: Product) => (
-                <MenuItem key={product.id} product={product} />
+                <MenuItem key={product.id} product={product} isPreview={isPreview} />
               ))}
             </div>
           </section>

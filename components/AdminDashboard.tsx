@@ -488,7 +488,7 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-semibold mb-4">Müşteri Menü Önizlemesi</h2>
               <iframe 
               id="preview-iframe" // ID EKLEDİK
-              src="/" // ARTIK KEY PARAMETRESİNE GEREK YOK
+              src="/?preview=true" // ARTIK KEY PARAMETRESİNE GEREK YOK
               className="w-full h-[500px] sm:h-[600px] border border-gray-200 rounded" 
               title="Müşteri Menü Önizlemesi" 
             />
